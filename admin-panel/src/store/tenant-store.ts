@@ -1,15 +1,18 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Tenant, TenantBranding } from '@/types/tenant.types';
+import { initializeTenantResolution } from '@/lib/tenant';
 
 interface TenantState {
   tenant: Tenant | null;
+  tenantId: string;
   branding: TenantBranding;
   isLoading: boolean;
   setTenant: (tenant: Tenant) => void;
   updateBranding: (branding: Partial<TenantBranding>) => void;
   setLoading: (loading: boolean) => void;
   clearTenant: () => void;
+  initializeTenant: () => void;
 }
 
 const defaultBranding: TenantBranding = {
@@ -21,14 +24,24 @@ export const useTenantStore = create<TenantState>()(
   persist(
     (set) => ({
       tenant: null,
+      tenantId: '',
       branding: defaultBranding,
       isLoading: false,
+
+      initializeTenant: () => {
+        const resolution = initializeTenantResolution()
+        set({ tenantId: resolution.tenantId })
+      },
 
       setTenant: (tenant) => {
         set({
           tenant,
+          tenantId: tenant.id,
           branding: { ...defaultBranding, ...tenant.branding },
         });
+        
+        // Store tenant ID for API requests
+        localStorage.setItem('tenant_id', tenant.id)
         
         // Apply branding to document
         if (tenant.branding) {
@@ -78,13 +91,15 @@ export const useTenantStore = create<TenantState>()(
       },
 
       clearTenant: () => {
-        set({ tenant: null, branding: defaultBranding });
+        set({ tenant: null, tenantId: '', branding: defaultBranding });
+        localStorage.removeItem('tenant_id')
       },
     }),
     {
       name: 'tenant-storage',
       partialize: (state) => ({
         tenant: state.tenant,
+        tenantId: state.tenantId,
         branding: state.branding,
       }),
     }

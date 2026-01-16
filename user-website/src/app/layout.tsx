@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
 import { Toaster } from 'sonner'
+import { ConnectionStatus } from '@/components/ConnectionStatus'
+import { NetworkStatus } from '@/components/NetworkStatus'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
@@ -21,6 +23,8 @@ export default function RootLayout({
       <body className={inter.variable}>
         <Providers>
           {children}
+          <ConnectionStatus />
+          <NetworkStatus />
           <Toaster position="top-right" />
         </Providers>
       </body>

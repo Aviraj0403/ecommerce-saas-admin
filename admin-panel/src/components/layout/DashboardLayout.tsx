@@ -1,13 +1,19 @@
 ﻿import { Outlet, Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, Menu, X } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingCart, Users, FolderTree, CreditCard, Settings, LogOut, Menu, X, Key, BarChart3 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuthStore } from '@/store/auth-store'
+import { ConnectionStatus } from '@/components/ConnectionStatus'
+import { NetworkStatus } from '@/components/NetworkStatus'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Products', href: '/products', icon: Package },
   { name: 'Orders', href: '/orders', icon: ShoppingCart },
   { name: 'Customers', href: '/customers', icon: Users },
+  { name: 'Categories', href: '/categories', icon: FolderTree },
+  { name: 'Subscription', href: '/subscription', icon: CreditCard },
+  { name: 'API Keys', href: '/api-keys', icon: Key },
+  { name: 'Reports', href: '/reports', icon: BarChart3 },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
@@ -18,6 +24,8 @@ export default function DashboardLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <ConnectionStatus />
+      <NetworkStatus />
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r transform transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         <div className="flex items-center justify-between h-16 px-6 border-b">
           <h1 className="text-xl font-bold text-primary-600">GK Store Admin</h1>

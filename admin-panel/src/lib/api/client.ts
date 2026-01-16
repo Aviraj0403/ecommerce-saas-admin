@@ -1,4 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
+import { displayAPIError, handleAPIError, handleServerError } from './errorHandler';
+import { handleAuthError } from '../auth/errorHandler';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:6005';
 const TENANT_ID = import.meta.env.VITE_PROJECT_ID || '';
@@ -38,9 +40,24 @@ class APIClient {
     this.client.interceptors.response.use(
       (response) => response,
       (error: AxiosError) => {
-        if (error.response?.status === 401) {
-          this.handleUnauthorized();
+        const apiError = handleAPIError(error);
+        
+        // Handle authentication errors
+        if (apiError.statusCode === 401) {
+          handleAuthError(error);
+          return Promise.reject(error);
         }
+        
+        // Handle network errors
+        if (apiError.code === 'NETWORK_ERROR') {
+          console.error('Network error detected:', error);
+        }
+        
+        // Handle server errors
+        if (apiError.statusCode && apiError.statusCode >= 500) {
+          handleServerError(error);
+        }
+        
         return Promise.reject(error);
       }
     );
@@ -52,11 +69,6 @@ class APIClient {
 
   private getTenantId(): string {
     return localStorage.getItem('tenant_id') || TENANT_ID;
-  }
-
-  private handleUnauthorized(): void {
-    localStorage.removeItem('admin_token');
-    window.location.href = '/login';
   }
 
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
@@ -82,6 +94,46 @@ class APIClient {
   async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.delete<T>(url, config);
     return response.data;
+  }
+
+  // Method to make requests with automatic error display
+  async request<T>(
+    method: 'get' | 'post' | 'put' | 'patch' | 'delete',
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig & { showError?: boolean }
+  ): Promise<T> {
+    try {
+      const { showError = true, ...axiosConfig } = config || {};
+      
+      let response;
+      switch (method) {
+        case 'get':
+          response = await this.get<T>(url, axiosConfig);
+          break;
+        case 'post':
+          response = await this.post<T>(url, data, axiosConfig);
+          break;
+        case 'put':
+          response = await this.put<T>(url, data, axiosConfig);
+          break;
+        case 'patch':
+          response = await this.patch<T>(url, data, axiosConfig);
+          break;
+        case 'delete':
+          response = await this.delete<T>(url, axiosConfig);
+          break;
+        default:
+          throw new Error(`Unsupported method: ${method}`);
+      }
+      
+      return response;
+    } catch (error) {
+      if (config?.showError !== false) {
+        displayAPIError(error);
+      }
+      throw error;
+    }
   }
 
   // Get the underlying axios instance for advanced usage

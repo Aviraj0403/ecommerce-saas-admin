@@ -22,7 +22,11 @@ export function useLogin() {
     onSuccess: (data) => {
       login(data.user, data.token);
       toast.success('Login successful!');
-      router.push('/');
+      
+      // Check for redirect parameter
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get('redirect');
+      router.push(redirect || '/');
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Login failed');
@@ -105,6 +109,13 @@ export function useLogout() {
     onSuccess: () => {
       logout();
       queryClient.clear();
+      
+      // Disconnect Socket.IO
+      if (typeof window !== 'undefined') {
+        const { socketClient } = require('@/lib/socket');
+        socketClient.disconnect();
+      }
+      
       toast.success('Logged out successfully');
       router.push('/login');
     },
@@ -112,6 +123,13 @@ export function useLogout() {
       // Logout locally even if API call fails
       logout();
       queryClient.clear();
+      
+      // Disconnect Socket.IO
+      if (typeof window !== 'undefined') {
+        const { socketClient } = require('@/lib/socket');
+        socketClient.disconnect();
+      }
+      
       router.push('/login');
     },
   });

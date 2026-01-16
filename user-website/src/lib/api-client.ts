@@ -4,7 +4,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6005'
 const TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID || ''
 
 export const apiClient = axios.create({
-  baseURL: ${API_URL}/v1/api,
+  baseURL: `${API_URL}/v1/api`,
   headers: {
     'Content-Type': 'application/json',
     'X-Project-ID': TENANT_ID,
@@ -14,7 +14,7 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) {
-    config.headers.Authorization = Bearer 
+    config.headers.Authorization = `Bearer ${token}`
   }
   return config
 })

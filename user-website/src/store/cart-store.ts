@@ -1,6 +1,7 @@
 ﻿import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { CartItem, AddToCartData } from '@/types/cart.types';
+import { EnhancedStorage, storageValidators, CrossTabSync } from '@/lib/persistence';
 
 interface CartState {
   items: CartItem[];
@@ -14,7 +15,11 @@ interface CartState {
   syncWithBackend: (items: CartItem[]) => void;
   setLoading: (loading: boolean) => void;
   calculateTotals: () => void;
+  syncFromOtherTab: (state: Partial<CartState>) => void;
 }
+
+// Cross-tab sync instance
+const crossTabSync = typeof window !== 'undefined' ? new CrossTabSync() : null;
 
 export const useCartStore = create<CartState>()(
   persist(
@@ -102,14 +107,32 @@ export const useCartStore = create<CartState>()(
         const itemCount = state.items.reduce((sum, i) => sum + i.quantity, 0);
         set({ total, itemCount });
       },
+
+      syncFromOtherTab: (newState) => {
+        const currentState = get();
+        if (storageValidators.cart(newState)) {
+          set({
+            ...currentState,
+            ...newState,
+          });
+        }
+      },
     }),
     {
       name: 'cart-storage',
+      storage: createJSONStorage(() => new EnhancedStorage()),
       partialize: (state) => ({
         items: state.items,
         total: state.total,
         itemCount: state.itemCount,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state && crossTabSync) {
+          crossTabSync.subscribe('cart-storage', (syncedState) => {
+            state.syncFromOtherTab(syncedState);
+          });
+        }
+      },
     }
   )
 );
