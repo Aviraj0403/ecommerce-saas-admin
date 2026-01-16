@@ -1,4 +1,5 @@
-﻿import { Routes, Route, Navigate, lazy, Suspense } from 'react-router-dom'
+﻿import { lazy, Suspense } from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { useAuthStore } from './store/auth-store'
 import DashboardLayout from './components/layout/DashboardLayout'
