@@ -4,6 +4,7 @@ import { Toaster } from 'sonner'
 import { useAuthStore } from './store/auth-store'
 import DashboardLayout from './components/layout/DashboardLayout'
 import { LoadingSpinner } from './components/ui/LoadingSpinner'
+import { DebugInfo } from './components/DebugInfo'
 
 // Lazy load pages for code splitting
 const LoginPage = lazy(() => import('./pages/LoginPage'))
@@ -66,6 +67,7 @@ function App() {
         </Routes>
       </Suspense>
       <Toaster position="top-right" />
+      <DebugInfo />
     </>
   )
 }
